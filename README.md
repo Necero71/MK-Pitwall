@@ -16,7 +16,7 @@ Plain HTML/CSS/JS, no build step.
 1. Push these files to the root of a repo's `main` branch.
 2. Repo **Settings > Pages**, source `main` / root.
 3. Open the Pages URL on your phone and use **Add to Home Screen** (iOS Safari) or **Install app** (Chrome on Android).
-
+4. https://necero71.github.io/MK-Pitwall/
 If you edit any file, bump `CACHE` in `sw.js` (`mkpit-v1` to `mkpit-v2`) so installed copies update.
 
 ## Notes
