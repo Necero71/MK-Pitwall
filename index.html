@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1b1f13">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MK PITWALL">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>MK PITWALL</title>
+<style>
+:root {
+  --bg: #1b1f13; --panel: #262b1a; --panel-2: #2f3520;
+  --olive: #5b6b2f; --olive-hi: #7d9140; --coyote: #8a6a43;
+  --tan: #cdb98c; --tan-dim: #9c8d6a; --warn: #c9622f; --line: #3b422a;
+  --up: #9fb85a; --down: #d08a4a;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --cut: 12px;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; background: var(--bg); color: var(--tan); font-family: var(--sans); }
+body {
+  min-height: 100dvh;
+  padding: env(safe-area-inset-top) 0 calc(72px + env(safe-area-inset-bottom));
+  background-image: linear-gradient(45deg, rgba(255,255,255,.015) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.015) 50%, rgba(255,255,255,.015) 75%, transparent 75%);
+  background-size: 24px 24px;
+}
+header { display: flex; align-items: center; gap: 12px; padding: 14px 16px 12px; border-bottom: 2px solid var(--olive); background: var(--bg); position: sticky; top: 0; z-index: 5; }
+.logo { width: 34px; height: 34px; flex: none; }
+.brand { font-family: var(--mono); font-weight: 800; letter-spacing: .18em; font-size: 15px; }
+.brand small { display: block; font-weight: 500; letter-spacing: .14em; font-size: 10px; color: var(--tan-dim); margin-top: 2px; }
+.stripe { margin-left: auto; width: 54px; height: 14px; background: repeating-linear-gradient(135deg, var(--coyote) 0 6px, transparent 6px 12px); }
+main { max-width: 560px; margin: 0 auto; padding: 14px 14px 24px; }
+.panel { display: none; } .panel.active { display: block; }
+
+h2 { font-family: var(--mono); font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--olive-hi); margin: 18px 0 8px; display: flex; align-items: center; gap: 8px; }
+h2::before { content: ""; width: 10px; height: 10px; background: var(--olive-hi); clip-path: polygon(0 0, 100% 50%, 0 100%); }
+h2:first-child { margin-top: 4px; }
+h2 .flag { margin-left: auto; font-size: 10px; letter-spacing: .12em; color: var(--warn); }
+
+.card { background: var(--panel); border: 1px solid var(--line); padding: 14px; margin-bottom: 12px;
+  clip-path: polygon(var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%, 0 var(--cut)); }
+.row { display: grid; gap: 10px; margin-bottom: 10px; } .row.two { grid-template-columns: 1fr 1fr; } .row:last-child { margin-bottom: 0; }
+
+label { display: block; font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--tan-dim); margin-bottom: 4px; }
+input, select, textarea, button { font: inherit; }
+input[type=text], input[type=number], input[type=search], select, textarea {
+  width: 100%; min-height: 46px; padding: 8px 10px; background: var(--bg); color: var(--tan);
+  border: 1px solid var(--line); border-bottom: 2px solid var(--olive); border-radius: 0;
+  font-family: var(--mono); font-size: 17px; appearance: none; -webkit-appearance: none;
+}
+textarea { min-height: 84px; resize: vertical; font-size: 15px; font-family: var(--sans); }
+select { font-size: 15px; padding-right: 30px; background-image: linear-gradient(45deg, transparent 50%, var(--tan-dim) 50%), linear-gradient(135deg, var(--tan-dim) 50%, transparent 50%); background-position: calc(100% - 18px) 20px, calc(100% - 12px) 20px; background-size: 6px 6px; background-repeat: no-repeat; }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--olive-hi); border-bottom-color: var(--tan); }
+input[type=number]::-webkit-outer-spin-button, input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+
+button { min-height: 46px; padding: 8px 14px; cursor: pointer; background: var(--olive); color: #eef0dc; border: 0; border-radius: 0;
+  font-family: var(--mono); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; font-size: 12px;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); }
+button:active { background: var(--olive-hi); }
+button.ghost { background: var(--panel-2); color: var(--tan); }
+button.danger { background: #6b3a22; }
+button.small { min-height: 38px; padding: 6px 10px; font-size: 11px; }
+
+/* steppers */
+.prm { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.prm:last-child { border-bottom: 0; }
+.prm .nm { font-size: 14px; line-height: 1.2; }
+.prm .nm small { display: block; font-family: var(--mono); font-size: 10px; color: var(--tan-dim); letter-spacing: .06em; margin-top: 2px; }
+.stp { display: grid; grid-template-columns: 46px 86px 46px; gap: 4px; }
+.stp button { padding: 0; font-size: 22px; clip-path: none; background: var(--panel-2); color: var(--tan); border: 1px solid var(--line); }
+.stp button:active { background: var(--olive); }
+.stp input { text-align: center; padding: 6px 2px; font-size: 18px; font-weight: 700; }
+.prm.chg .nm::before { content: ""; display: inline-block; width: 6px; height: 6px; background: var(--coyote); margin-right: 6px; vertical-align: middle; }
+.sub { font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--olive-hi); margin: 4px 0 0; }
+
+.toggle { display: flex; align-items: center; gap: 10px; margin: 8px 0 2px; font-size: 13px; color: var(--tan-dim); }
+.toggle input { width: 22px; height: 22px; accent-color: var(--olive-hi); }
+
+.chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.chip { min-height: 36px; padding: 6px 12px; font-size: 11px; background: var(--panel-2); color: var(--tan); clip-path: none; border: 1px solid var(--line); }
+.chip.on { background: var(--coyote); color: #fff; border-color: var(--coyote); }
+
+.hint { font-size: 12px; color: var(--tan-dim); line-height: 1.45; margin: 8px 0 0; }
+.msg { font-family: var(--mono); font-size: 12px; min-height: 16px; margin-top: 6px; color: var(--olive-hi); }
+.msg.err { color: var(--warn); }
+
+/* book */
+.item { background: var(--panel-2); border-left: 4px solid var(--coyote); padding: 10px 12px; margin-bottom: 10px; }
+.item.wet { border-left-color: #5d8aa8; }
+.item .t { font-weight: 700; font-size: 16px; word-break: break-word; }
+.item .m { font-family: var(--mono); font-size: 11px; color: var(--tan-dim); margin: 4px 0 8px; letter-spacing: .04em; }
+.item .acts { display: flex; gap: 8px; flex-wrap: wrap; }
+.badge { display: inline-block; font-family: var(--mono); font-size: 10px; letter-spacing: .12em; padding: 1px 6px; background: var(--coyote); color: #fff; margin-right: 6px; vertical-align: 2px; }
+.badge.wet { background: #5d8aa8; }
+.empty { text-align: center; color: var(--tan-dim); font-size: 13px; padding: 14px 0 4px; }
+
+/* compare */
+table { width: 100%; border-collapse: collapse; font-family: var(--mono); }
+th { text-align: right; font-size: 10px; letter-spacing: .12em; color: var(--tan-dim); text-transform: uppercase; padding: 4px 6px 6px; border-bottom: 1px solid var(--line); }
+th:first-child { text-align: left; }
+td { padding: 8px 6px; border-bottom: 1px solid var(--line); font-size: 14px; text-align: right; }
+td:first-child { text-align: left; font-family: var(--sans); font-size: 13px; }
+tr.chg td:first-child { border-left: 3px solid var(--coyote); padding-left: 8px; }
+tr.grp td { text-align: left; font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--olive-hi); padding-top: 14px; border-bottom: 1px solid var(--olive); }
+.d-up { color: var(--up); font-weight: 700; } .d-down { color: var(--down); font-weight: 700; } .d-0 { color: var(--tan-dim); }
+
+/* fix */
+.sym { width: 100%; text-align: left; background: var(--panel-2); color: var(--tan); border-left: 4px solid var(--olive); clip-path: none; min-height: 50px; font-family: var(--sans); font-weight: 600; letter-spacing: 0; text-transform: none; font-size: 15px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.sym.open { border-left-color: var(--coyote); background: #363d24; margin-bottom: 0; }
+.sym::after { content: "+"; font-family: var(--mono); color: var(--tan-dim); font-size: 18px; }
+.sym.open::after { content: "\2212"; }
+.fixes { background: var(--panel-2); border-left: 4px solid var(--coyote); padding: 4px 12px 10px; margin-bottom: 8px; }
+.fx { display: grid; grid-template-columns: 22px 1fr; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.fx:last-child { border-bottom: 0; }
+.fx .n { font-family: var(--mono); color: var(--tan-dim); }
+.fx b { font-weight: 700; }
+.fx .a-u { color: var(--up); } .fx .a-d { color: var(--down); }
+.fx i { display: block; font-style: normal; font-size: 12px; color: var(--tan-dim); margin-top: 2px; }
+
+nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; display: grid; grid-template-columns: repeat(4, 1fr); background: var(--bg); border-top: 2px solid var(--olive); padding-bottom: env(safe-area-inset-bottom); }
+nav button { min-height: 62px; background: transparent; color: var(--tan-dim); clip-path: none; font-size: 10px; letter-spacing: .1em; padding: 6px 2px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+nav button svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: square; }
+nav button.active { color: var(--tan); background: var(--panel); box-shadow: inset 0 3px 0 var(--coyote); }
+</style>
+</head>
+<body>
+
+<header>
+  <svg class="logo" viewBox="0 0 64 64" aria-hidden="true">
+    <rect width="64" height="64" fill="#2f3520"/>
+    <path d="M6 22 H44 L58 34 H20 Z" fill="#7d9140"/>
+    <path d="M6 38 H36 L48 48 H18 Z" fill="#8a6a43"/>
+  </svg>
+  <div class="brand">MK PITWALL<small>F1 26 SETUP BOOK</small></div>
+  <div class="stripe"></div>
+</header>
+
+<main>
+
+  <!-- SETUP -->
+  <section class="panel active" id="p-setup">
+    <h2>Setup sheet <span class="flag" id="dirtyFlag"></span></h2>
+    <div class="card">
+      <div class="row"><div><label for="sName">Setup name</label><input id="sName" type="text" autocomplete="off" maxlength="60" placeholder="e.g. Quali, low drag"></div></div>
+      <div class="row two">
+        <div><label for="sTrack">Track</label><input id="sTrack" type="text" list="trackList" autocomplete="off" maxlength="40" placeholder="Bahrain"></div>
+        <div><label for="sWeather">Conditions</label><select id="sWeather"><option value="dry">Dry</option><option value="wet">Wet</option></select></div>
+      </div>
+      <div class="row"><div><label for="sLap">Best lap with this setup</label><input id="sLap" type="text" inputmode="decimal" autocomplete="off" maxlength="16" placeholder="1:30.123"></div></div>
+      <datalist id="trackList"></datalist>
+    </div>
+
+    <div id="editor"></div>
+
+    <div class="card">
+      <div class="row"><div><label for="sNotes">Notes</label><textarea id="sNotes" maxlength="1000" placeholder="How it drives, what to try next"></textarea></div></div>
+      <div class="row two">
+        <button id="saveBtn">Save</button>
+        <button class="ghost" id="saveNewBtn">Save as new</button>
+      </div>
+      <div class="row two">
+        <button class="ghost" id="newBtn">New blank</button>
+        <button class="ghost" id="copyBtn">Copy sheet</button>
+      </div>
+      <div class="msg" id="sMsg"></div>
+      <p class="hint">Starter numbers are only a neutral baseline. Type or step each value to match what your car's setup screen shows. No limits are enforced, so the game's own menu is the final word.</p>
+    </div>
+  </section>
+
+  <!-- BOOK -->
+  <section class="panel" id="p-book">
+    <h2>Saved setups <span class="flag" id="bookCount"></span></h2>
+    <div class="card">
+      <div class="row two">
+        <div><label for="fTrack">Track</label><select id="fTrack"><option value="">All tracks</option></select></div>
+        <div><label for="fWeather">Conditions</label><select id="fWeather"><option value="">Any</option><option value="dry">Dry</option><option value="wet">Wet</option></select></div>
+      </div>
+    </div>
+    <div id="bookList"></div>
+
+    <h2>Backup</h2>
+    <div class="card">
+      <div class="row two">
+        <button class="ghost" id="exportBtn">Export JSON</button>
+        <button class="ghost" id="importBtn">Import JSON</button>
+      </div>
+      <input type="file" id="importFile" accept="application/json,.json" hidden>
+      <div class="msg" id="bMsg"></div>
+      <p class="hint">Setups live in this browser only. Export now and then so a cleared browser or new phone doesn't wipe the book.</p>
+    </div>
+  </section>
+
+  <!-- VS -->
+  <section class="panel" id="p-vs">
+    <h2>Compare</h2>
+    <div class="card">
+      <div class="row"><div><label for="vsA">Setup A</label><select id="vsA"></select></div></div>
+      <div class="row"><div><label for="vsB">Setup B</label><select id="vsB"></select></div></div>
+      <div class="toggle"><input type="checkbox" id="vsOnly" checked><label for="vsOnly" style="margin:0;text-transform:none;letter-spacing:0;font-family:var(--sans);font-size:13px">Show changed values only</label></div>
+    </div>
+    <div class="card" id="vsOut"><div class="empty">Pick two setups to compare. "Current sheet" is whatever is open on the Setup tab, saved or not.</div></div>
+  </section>
+
+  <!-- FIX -->
+  <section class="panel" id="p-fix">
+    <h2>What's the car doing?</h2>
+    <p class="hint" style="margin:0 0 12px">Rules of thumb for how these settings usually behave, listed in the order worth trying. Change one thing at a time, in small steps, and re-run the same lap. They aren't F1 26 measurements, so trust your lap times over this list.</p>
+    <div id="fixList"></div>
+  </section>
+
+</main>
+
+<nav id="tabs" aria-label="Sections">
+  <button data-tab="setup" class="active"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M6 14v6"/></svg>SETUP</button>
+  <button data-tab="book"><svg viewBox="0 0 24 24"><path d="M5 3h14v18H5zM9 3v18M12 8h4M12 12h4"/></svg>BOOK</button>
+  <button data-tab="vs"><svg viewBox="0 0 24 24"><path d="M3 8h14M13 4l4 4-4 4M21 16H7M11 12l-4 4 4 4"/></svg>VS</button>
+  <button data-tab="fix"><svg viewBox="0 0 24 24"><path d="M14 6a4 4 0 0 0 4 4l-9 9a2.1 2.1 0 0 1-3-3l9-9a4 4 0 0 0-1-1z"/></svg>FIX</button>
+</nav>
+
+<script src="core.js"></script>
+<script>
+(function () {
+  'use strict';
+  var C = window.PitCore;
+  var $ = function (s) { return document.querySelector(s); };
+  var $$ = function (s) { return Array.prototype.slice.call(document.querySelectorAll(s)); };
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+
+  /* ---------- storage ---------- */
+  var KEY = 'mkpit.v1';
+  var store = { setups: [], draft: null, tab: 'setup', link: true };
+  try {
+    var raw = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (raw && typeof raw === 'object') {
+      store.setups = Array.isArray(raw.setups) ? raw.setups.map(C.clean) : [];
+      store.draft = raw.draft ? C.clean(raw.draft) : null;
+      store.tab = typeof raw.tab === 'string' ? raw.tab : 'setup';
+      store.link = raw.link !== false;
+    }
+  } catch (e) { /* start fresh */ }
+  function persist() {
+    try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) { /* private mode */ }
+  }
+
+  var TRACKS = ['Australia', 'China', 'Japan', 'Bahrain', 'Saudi Arabia', 'Miami', 'Canada', 'Monaco', 'Barcelona', 'Austria', 'Great Britain', 'Belgium', 'Hungary', 'Netherlands', 'Italy (Monza)', 'Madrid', 'Azerbaijan', 'Singapore', 'USA (Austin)', 'Mexico', 'Brazil', 'Las Vegas', 'Qatar', 'Abu Dhabi'];
+  $('#trackList').innerHTML = TRACKS.map(function (t) { return '<option value="' + esc(t) + '">'; }).join('');
+
+  /* ---------- current sheet ---------- */
+  var cur = store.draft || C.blank();
+  var baseline = JSON.stringify(cur);   // last saved/loaded state, for the unsaved flag
+  if (!store.draft) baseline = JSON.stringify(cur);
+
+  function snapshot() { return JSON.stringify(cur); }
+  function touch() {
+    store.draft = cur; persist();
+    $('#dirtyFlag').textContent = snapshot() !== baseline ? 'UNSAVED' : '';
+  }
+  function setBaseline() { baseline = snapshot(); $('#dirtyFlag').textContent = ''; }
+
+  /* ---------- tabs ---------- */
+  function showTab(name) {
+    $$('.panel').forEach(function (p) { p.classList.toggle('active', p.id === 'p-' + name); });
+    $$('#tabs button').forEach(function (b) { b.classList.toggle('active', b.dataset.tab === name); });
+    store.tab = name; persist();
+    if (name === 'book') renderBook();
+    if (name === 'vs') fillVsSelects();
+    window.scrollTo(0, 0);
+  }
+  $('#tabs').addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) showTab(b.dataset.tab); });
+
+  /* ---------- editor ---------- */
+  var LINK = { tFL: 'tFR', tFR: 'tFL', tRL: 'tRR', tRR: 'tRL' };
+  var baselineP = null;   // params of the last saved/loaded state, to mark changed rows
+
+  function buildEditor() {
+    var html = '', group = '';
+    C.PARAMS.forEach(function (p) {
+      if (p.g !== group) {
+        if (group) html += '</div>';
+        group = p.g;
+        html += '<h2>' + esc(group) + '</h2><div class="card">';
+        if (group === 'Tyre Pressures') {
+          html += '<div class="toggle" style="margin-top:0"><input type="checkbox" id="linkLR"><label for="linkLR" style="margin:0;text-transform:none;letter-spacing:0;font-family:var(--sans);font-size:13px">Keep left and right the same</label></div>';
+        }
+      }
+      html += '<div class="prm" data-k="' + p.k + '"><div class="nm">' + esc(p.l) + (p.unit ? '<small>' + esc(p.unit) + '</small>' : '') + '</div>' +
+        '<div class="stp"><button type="button" data-dir="-1" aria-label="Decrease ' + esc(p.l) + '">&minus;</button>' +
+        '<input type="number" inputmode="decimal" step="' + p.step + '" data-k="' + p.k + '" aria-label="' + esc(p.l) + '">' +
+        '<button type="button" data-dir="1" aria-label="Increase ' + esc(p.l) + '">+</button></div></div>';
+    });
+    html += '</div>';
+    $('#editor').innerHTML = html;
+    $('#linkLR').checked = store.link;
+  }
+
+  function paintEditor() {
+    C.PARAMS.forEach(function (p) {
+      var inp = $('#editor input[data-k="' + p.k + '"]');
+      if (document.activeElement !== inp) inp.value = C.fmtVal(p, cur.p[p.k]);
+      var row = inp.closest('.prm');
+      row.classList.toggle('chg', baselineP ? cur.p[p.k] !== baselineP[p.k] : false);
+    });
+  }
+  function paintMeta() {
+    $('#sName').value = cur.name; $('#sTrack').value = cur.track; $('#sWeather').value = cur.weather;
+    $('#sLap').value = cur.lap; $('#sNotes').value = cur.notes;
+  }
+  function paintAll() { paintMeta(); paintEditor(); touch(); }
+
+  function setParam(k, v) {
+    cur.p[k] = v;
+    if (store.link && LINK[k]) cur.p[LINK[k]] = v;
+  }
+
+  $('#editor').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-dir]'); if (!b) return;
+    var k = b.closest('.prm').dataset.k;
+    setParam(k, C.stepValue(k, cur.p[k], parseInt(b.dataset.dir, 10)));
+    paintEditor(); touch();
+  });
+  $('#editor').addEventListener('input', function (e) {
+    var inp = e.target.closest('input[data-k]'); if (!inp) return;
+    var v = parseFloat(inp.value);
+    if (isNaN(v)) return;
+    var p = C.BY_KEY[inp.dataset.k];
+    setParam(p.k, C.round(v, p.dec));
+    // repaint other rows (linked tyre) without touching the field being typed in
+    paintEditor(); touch();
+  });
+  $('#editor').addEventListener('change', function (e) {
+    if (e.target.id === 'linkLR') { store.link = e.target.checked; persist(); return; }
+    var inp = e.target.closest('input[data-k]'); if (!inp) return;
+    inp.value = C.fmtVal(inp.dataset.k, cur.p[inp.dataset.k]);
+  });
+
+  $('#sName').addEventListener('input', function () { cur.name = this.value; touch(); });
+  $('#sTrack').addEventListener('input', function () { cur.track = this.value; touch(); });
+  $('#sWeather').addEventListener('change', function () { cur.weather = this.value; touch(); });
+  $('#sLap').addEventListener('input', function () { cur.lap = this.value; touch(); });
+  $('#sNotes').addEventListener('input', function () { cur.notes = this.value; touch(); });
+
+  function flash(sel, text, isErr) {
+    var el = $(sel); el.textContent = text; el.classList.toggle('err', !!isErr);
+    clearTimeout(el._t); el._t = setTimeout(function () { el.textContent = ''; }, 3000);
+  }
+
+  function commit(asNew) {
+    var name = (cur.name || '').trim();
+    if (!name && !cur.track.trim()) { flash('#sMsg', 'Give it a name or a track first.', true); return; }
+    if (!name) cur.name = name = cur.track.trim() + (cur.weather === 'wet' ? ' wet' : ' dry');
+    var copy = C.clean(cur);
+    copy.updated = Date.now();
+    var idx = -1;
+    if (!asNew && cur.id) store.setups.forEach(function (s, i) { if (s.id === cur.id) idx = i; });
+    if (idx >= 0) { copy.id = cur.id; store.setups[idx] = copy; }
+    else { copy.id = C.uid(); store.setups.push(copy); }
+    cur.id = copy.id; cur.updated = copy.updated;
+    baselineP = Object.assign({}, cur.p);
+    setBaseline(); paintAll(); setBaseline();
+    flash('#sMsg', idx >= 0 ? 'Saved.' : 'Saved to the book.');
+  }
+  $('#saveBtn').addEventListener('click', function () { commit(false); });
+  $('#saveNewBtn').addEventListener('click', function () { commit(true); });
+  $('#newBtn').addEventListener('click', function () {
+    if (snapshot() !== baseline && !confirm('Discard unsaved changes on this sheet?')) return;
+    cur = C.blank(); baselineP = null; paintAll(); setBaseline(); flash('#sMsg', 'Blank sheet.');
+  });
+  $('#copyBtn').addEventListener('click', function () {
+    var t = C.toText(cur);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(t).then(function () { flash('#sMsg', 'Setup sheet copied.'); }, function () { flash('#sMsg', 'Copy blocked by the browser.', true); });
+    } else flash('#sMsg', 'Copy not available here.', true);
+  });
+
+  /* ---------- book ---------- */
+  function renderFilters() {
+    var sel = $('#fTrack'), keep = sel.value;
+    var tracks = {};
+    store.setups.forEach(function (s) { if (s.track) tracks[s.track] = 1; });
+    sel.innerHTML = '<option value="">All tracks</option>' + Object.keys(tracks).sort().map(function (t) { return '<option value="' + esc(t) + '">' + esc(t) + '</option>'; }).join('');
+    sel.value = tracks[keep] ? keep : '';
+  }
+  function renderBook() {
+    renderFilters();
+    var ft = $('#fTrack').value, fw = $('#fWeather').value;
+    var list = store.setups.filter(function (s) { return (!ft || s.track === ft) && (!fw || s.weather === fw); })
+      .sort(function (a, b) { return b.updated - a.updated; });
+    $('#bookCount').textContent = store.setups.length + ' SAVED';
+    if (!list.length) {
+      $('#bookList').innerHTML = '<div class="card"><div class="empty">' + (store.setups.length ? 'Nothing matches that filter.' : 'No saved setups yet. Build one on the Setup tab and hit Save.') + '</div></div>';
+      return;
+    }
+    $('#bookList').innerHTML = list.map(function (s) {
+      var d = s.updated ? new Date(s.updated).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : '';
+      return '<div class="item ' + s.weather + '" data-id="' + esc(s.id) + '">' +
+        '<div class="t"><span class="badge ' + s.weather + '">' + s.weather.toUpperCase() + '</span>' + esc(s.name || 'Untitled') + '</div>' +
+        '<div class="m">' + esc(s.track || 'No track') + (s.lap ? ' &middot; ' + esc(s.lap) : '') + (d ? ' &middot; ' + esc(d) : '') + '</div>' +
+        '<div class="acts"><button class="small" data-act="load">Open</button><button class="small ghost" data-act="dup">Duplicate</button><button class="small ghost" data-act="copy">Copy</button><button class="small danger" data-act="del">Delete</button></div></div>';
+    }).join('');
+  }
+  $('#fTrack').addEventListener('change', renderBook);
+  $('#fWeather').addEventListener('change', renderBook);
+  $('#bookList').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-act]'); if (!b) return;
+    var id = b.closest('.item').dataset.id;
+    var s = store.setups.filter(function (x) { return x.id === id; })[0]; if (!s) return;
+    if (b.dataset.act === 'load') {
+      if (snapshot() !== baseline && !confirm('Discard unsaved changes on the current sheet?')) return;
+      cur = C.clean(s); baselineP = Object.assign({}, cur.p); paintAll(); setBaseline(); showTab('setup');
+    } else if (b.dataset.act === 'dup') {
+      var c2 = C.clean(s); c2.id = C.uid(); c2.name = (s.name || 'Untitled') + ' copy'; c2.updated = Date.now();
+      store.setups.push(c2); persist(); renderBook();
+    } else if (b.dataset.act === 'copy') {
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(C.toText(s)).then(function () { flash('#bMsg', 'Setup sheet copied.'); }, function () {});
+    } else if (b.dataset.act === 'del') {
+      if (!confirm('Delete "' + (s.name || 'Untitled') + '"? This can’t be undone.')) return;
+      store.setups = store.setups.filter(function (x) { return x.id !== id; });
+      if (cur.id === id) { cur.id = null; baseline = ''; touch(); }
+      persist(); renderBook();
+    }
+  });
+
+  $('#exportBtn').addEventListener('click', function () {
+    if (!store.setups.length) { flash('#bMsg', 'Nothing to export yet.', true); return; }
+    var blob = new Blob([JSON.stringify({ app: 'mk-pitwall', version: 1, exported: new Date().toISOString(), setups: store.setups }, null, 2)], { type: 'application/json' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'mk-pitwall-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+    flash('#bMsg', 'Exported ' + store.setups.length + ' setups.');
+  });
+  $('#importBtn').addEventListener('click', function () { $('#importFile').click(); });
+  $('#importFile').addEventListener('change', function () {
+    var f = this.files && this.files[0]; if (!f) return;
+    if (f.size > 2000000) { flash('#bMsg', 'That file is too big to be a backup.', true); this.value = ''; return; }
+    var rd = new FileReader();
+    rd.onload = function () {
+      var json; try { json = JSON.parse(rd.result); } catch (e) { flash('#bMsg', 'Not a valid JSON file.', true); return; }
+      var r = C.mergeImport(store.setups, json);
+      if (!r) { flash('#bMsg', 'No setups found in that file.', true); return; }
+      store.setups = r.list; persist(); renderBook();
+      flash('#bMsg', 'Imported: ' + r.added + ' new, ' + r.updated + ' updated, ' + r.skipped + ' skipped.');
+    };
+    rd.readAsText(f);
+    this.value = '';
+  });
+
+  /* ---------- compare ---------- */
+  function setupLabel(s) { return (s.track ? s.track + ' – ' : '') + (s.name || 'Untitled') + ' (' + s.weather + ')'; }
+  function fillVsSelects() {
+    var a = $('#vsA'), b = $('#vsB'), ka = a.value, kb = b.value;
+    var opts = '<option value="cur">Current sheet</option>' + store.setups.slice().sort(function (x, y) { return y.updated - x.updated; })
+      .map(function (s) { return '<option value="' + esc(s.id) + '">' + esc(setupLabel(s)) + '</option>'; }).join('');
+    a.innerHTML = opts; b.innerHTML = opts;
+    a.value = ka && a.querySelector('option[value="' + ka + '"]') ? ka : 'cur';
+    b.value = kb && b.querySelector('option[value="' + kb + '"]') ? kb : (store.setups.length ? C.clean(store.setups.slice().sort(function (x, y) { return y.updated - x.updated; })[0]).id : 'cur');
+    renderVs();
+  }
+  function pick(v) { return v === 'cur' ? cur : store.setups.filter(function (s) { return s.id === v; })[0]; }
+  function renderVs() {
+    var A = pick($('#vsA').value), B = pick($('#vsB').value);
+    var out = $('#vsOut');
+    if (!A || !B) { out.innerHTML = '<div class="empty">Pick two setups to compare.</div>'; return; }
+    if ($('#vsA').value === $('#vsB').value) { out.innerHTML = '<div class="empty">Pick two different setups.</div>'; return; }
+    var only = $('#vsOnly').checked;
+    var rows = C.diff(A, B), group = '', html = '', n = 0;
+    rows.forEach(function (r) {
+      if (only && !r.changed) return;
+      n++;
+      if (r.g !== group) { group = r.g; html += '<tr class="grp"><td colspan="4">' + esc(group) + '</td></tr>'; }
+      var cls = r.d > 0 ? 'd-up' : (r.d < 0 ? 'd-down' : 'd-0');
+      html += '<tr class="' + (r.changed ? 'chg' : '') + '"><td>' + esc(r.l) + '</td><td>' + C.fmtVal(r.k, r.a) + '</td><td>' + C.fmtVal(r.k, r.b) + '</td><td class="' + cls + '">' + C.fmtDelta(r.d, r.dec) + '</td></tr>';
+    });
+    if (!n) { out.innerHTML = '<div class="empty">These two are identical.</div>'; return; }
+    var head = '<table><thead><tr><th>Setting</th><th>A</th><th>B</th><th>B&minus;A</th></tr></thead><tbody>' + html + '</tbody></table>';
+    var lap = (A.lap || B.lap) ? '<p class="hint">Best laps: A ' + esc(A.lap || '--') + ' &middot; B ' + esc(B.lap || '--') + '</p>' : '';
+    out.innerHTML = head + lap;
+  }
+  $('#vsA').addEventListener('change', renderVs);
+  $('#vsB').addEventListener('change', renderVs);
+  $('#vsOnly').addEventListener('change', renderVs);
+
+  /* ---------- fix guide ---------- */
+  (function () {
+    var html = '';
+    C.FIX.forEach(function (g, gi) {
+      html += '<h2>' + esc(g.g) + '</h2>';
+      g.items.forEach(function (it, ii) {
+        html += '<button class="sym" data-fix="' + gi + '-' + ii + '" aria-expanded="false">' + esc(it.s) + '</button><div class="fixes" id="fx-' + gi + '-' + ii + '" hidden>';
+        it.f.forEach(function (f, n) {
+          var up = f[1] === 'u';
+          html += '<div class="fx"><span class="n">' + (n + 1) + '</span><div><b>' + esc(f[0]) + '</b> <span class="' + (up ? 'a-u' : 'a-d') + '">' + (up ? '▲ raise' : '▼ lower') + '</span><i>' + esc(f[2]) + '</i></div></div>';
+        });
+        html += '</div>';
+      });
+    });
+    $('#fixList').innerHTML = html;
+    $('#fixList').addEventListener('click', function (e) {
+      var b = e.target.closest('button[data-fix]'); if (!b) return;
+      var panel = document.getElementById('fx-' + b.dataset.fix);
+      var open = panel.hidden;
+      panel.hidden = !open; b.classList.toggle('open', open); b.setAttribute('aria-expanded', String(open));
+    });
+  })();
+
+  /* ---------- init ---------- */
+  buildEditor();
+  if (store.draft && store.draft.id) {
+    var saved = store.setups.filter(function (s) { return s.id === store.draft.id; })[0];
+    if (saved) { baselineP = Object.assign({}, saved.p); baseline = JSON.stringify(saved); }
+  }
+  paintMeta(); paintEditor(); touch();
+  if (document.getElementById('p-' + store.tab)) showTab(store.tab);
+
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+    window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+  }
+})();
+</script>
+</body>
+</html>
