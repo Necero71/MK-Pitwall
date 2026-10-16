@@ -1,6 +1,6 @@
 /* MK PITWALL service worker: cache-first so the app works offline.
    Bump CACHE when you change any file so installed copies update. */
-var CACHE = 'mkpit-v1';
+var CACHE = 'mkpit-v2';
 var ASSETS = [
   './',
   './index.html',

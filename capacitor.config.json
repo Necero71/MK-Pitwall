@@ -1,0 +1,9 @@
+{
+  "appId": "io.github.necero71.mkpitwall",
+  "appName": "MK PITWALL",
+  "webDir": "www",
+  "backgroundColor": "#1b1f13",
+  "android": {
+    "allowMixedContent": false
+  }
+}

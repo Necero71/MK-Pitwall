@@ -429,10 +429,28 @@ nav button.active { color: var(--tan); background: var(--panel); box-shadow: ins
 
   $('#exportBtn').addEventListener('click', function () {
     if (!store.setups.length) { flash('#bMsg', 'Nothing to export yet.', true); return; }
-    var blob = new Blob([JSON.stringify({ app: 'mk-pitwall', version: 1, exported: new Date().toISOString(), setups: store.setups }, null, 2)], { type: 'application/json' });
+    var text = JSON.stringify({ app: 'mk-pitwall', version: 1, exported: new Date().toISOString(), setups: store.setups }, null, 2);
+    var fname = 'mk-pitwall-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+    var cap = window.Capacitor, P = null;
+    if (cap && cap.isNativePlatform && cap.isNativePlatform() && cap.registerPlugin) {
+      /* no bundler here, so the native plugins have to be registered by hand */
+      try { P = { Filesystem: cap.registerPlugin('Filesystem'), Share: cap.registerPlugin('Share') }; } catch (e) { P = null; }
+    }
+    if (P) {
+      /* Android app: WebViews ignore blob downloads, so write to cache and open the share sheet */
+      P.Filesystem.writeFile({ path: fname, data: text, directory: 'CACHE', encoding: 'utf8' })
+        .then(function (r) { return P.Share.share({ title: 'MK PITWALL backup', url: r.uri, dialogTitle: 'Save backup' }); })
+        .then(function () { flash('#bMsg', 'Exported ' + store.setups.length + ' setups.'); })
+        .catch(function (e) {
+          if (e && /cancel/i.test(String(e.message || e))) return; /* user closed the share sheet */
+          flash('#bMsg', 'Export failed.', true);
+        });
+      return;
+    }
+    var blob = new Blob([text], { type: 'application/json' });
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'mk-pitwall-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+    a.download = fname;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
     flash('#bMsg', 'Exported ' + store.setups.length + ' setups.');
@@ -520,7 +538,9 @@ nav button.active { color: var(--tan); background: var(--panel); box-shadow: ins
   paintMeta(); paintEditor(); touch();
   if (document.getElementById('p-' + store.tab)) showTab(store.tab);
 
-  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  /* Skip the service worker inside the Android app: the files are already bundled, and a cache layer would fight app updates */
+  var inNativeApp = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+  if ('serviceWorker' in navigator && location.protocol !== 'file:' && !inNativeApp) {
     window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
   }
 })();
