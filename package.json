@@ -1,0 +1,20 @@
+{
+  "name": "mk-pitwall",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MK PITWALL - F1 26 setup book (web + Android via Capacitor)",
+  "scripts": {
+    "build": "node scripts/build-web.js",
+    "sync": "npm run build && cap sync android",
+    "open": "cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.1.5",
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/filesystem": "^8.0.3",
+    "@capacitor/share": "^8.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.0.0"
+  }
+}
