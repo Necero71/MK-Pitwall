@@ -1,4 +1,4 @@
-# Console Telemetry (Android)
+# MK Telemetry (Android)
 
 A live dashboard on your phone for racing games' UDP telemetry, running on Xbox and PlayStation.
 

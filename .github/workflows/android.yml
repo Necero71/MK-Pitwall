@@ -1,7 +1,8 @@
 name: Android APK
 
 # Release:  git tag v1.0.0 && git push origin v1.0.0   (builds a SIGNED APK and publishes a GitHub Release)
-# Test:     Actions tab > Android APK > Run workflow   (builds a DEBUG APK as a downloadable artifact only)
+# Test:     Actions tab > Android APK > Run workflow   (builds DEBUG APKs as downloadable artifacts only)
+# Builds both apps in this repo: MK PITWALL (android/) and MK Telemetry (telemetry/).
 
 on:
   push:
@@ -95,16 +96,45 @@ jobs:
           cp "$SRC" "$OUT"
           echo "file=$OUT" >> "$GITHUB_OUTPUT"
 
+      - name: Build MK Telemetry APK
+        working-directory: telemetry
+        env:
+          SIGNED: ${{ steps.key.outputs.signed }}
+          V_NAME: ${{ steps.ver.outputs.name }}
+          V_CODE: ${{ steps.ver.outputs.code }}
+        run: |
+          chmod +x gradlew
+          if [ "$SIGNED" = "true" ]; then TASK=assembleRelease; else TASK=assembleDebug; fi
+          ./gradlew "$TASK" -PversionCode="$V_CODE" -PversionName="$V_NAME" --no-daemon
+
+      - name: Collect MK Telemetry APK
+        id: tapk
+        env:
+          SIGNED: ${{ steps.key.outputs.signed }}
+          V_NAME: ${{ steps.ver.outputs.name }}
+        run: |
+          if [ "$SIGNED" = "true" ]; then SRC=$(ls telemetry/app/build/outputs/apk/release/*.apk); SUFFIX=""; else SRC=$(ls telemetry/app/build/outputs/apk/debug/*.apk); SUFFIX="-DEBUG"; fi
+          OUT="mk-telemetry-v${V_NAME}${SUFFIX}.apk"
+          cp "$SRC" "$OUT"
+          echo "file=$OUT" >> "$GITHUB_OUTPUT"
+
       - name: Check the APK is really signed (release only)
         if: steps.key.outputs.signed == 'true'
         run: |
           BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
           "$BT/apksigner" verify --print-certs "${{ steps.apk.outputs.file }}"
+          "$BT/apksigner" verify --print-certs "${{ steps.tapk.outputs.file }}"
 
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.apk.outputs.file }}
           path: ${{ steps.apk.outputs.file }}
+          retention-days: 14
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.tapk.outputs.file }}
+          path: ${{ steps.tapk.outputs.file }}
           retention-days: 14
 
       - name: Publish GitHub Release
@@ -113,4 +143,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
           FILE: ${{ steps.apk.outputs.file }}
-        run: gh release create "$TAG" "$FILE" --title "$TAG" --generate-notes
+          TFILE: ${{ steps.tapk.outputs.file }}
+        run: gh release create "$TAG" "$FILE" "$TFILE" --title "$TAG" --generate-notes

@@ -4,6 +4,11 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
+// CI passes -PversionCode=<n> -PversionName=<x.y.z> on release tags, same as the Pitwall app.
+val appVersionCode = (findProperty("versionCode") ?: "3").toString().toInt()
+val appVersionName = (findProperty("versionName") ?: "0.2.1").toString()
+val keystoreFile: String? = System.getenv("ANDROID_KEYSTORE_FILE")
+
 android {
     namespace = "com.consoletelemetry"
     compileSdk = 35
@@ -12,13 +17,27 @@ android {
         applicationId = "com.consoletelemetry"
         minSdk = 26
         targetSdk = 35
-        versionCode = 3
-        versionName = "0.2.1"
+        versionCode = appVersionCode
+        versionName = appVersionName
+    }
+
+    signingConfigs {
+        // Filled in by CI from the repo secrets shared with Pitwall. Without them the
+        // release build stays unsigned, so nothing ships signed with the wrong key.
+        if (keystoreFile != null) {
+            create("release") {
+                storeFile = file(keystoreFile)
+                storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("ANDROID_KEY_ALIAS")
+                keyPassword = System.getenv("ANDROID_KEY_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
+            if (keystoreFile != null) signingConfig = signingConfigs.getByName("release")
         }
     }
 
