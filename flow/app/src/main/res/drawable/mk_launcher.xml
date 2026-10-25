@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- MK Flow: chamfered plate, olive corner notch, three tan chevrons. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+    <path
+        android:fillColor="#1A1E16"
+        android:strokeColor="#3A4030"
+        android:strokeWidth="8"
+        android:pathData="M72,16 L496,16 L496,440 L440,496 L16,496 L16,72 Z" />
+    <path
+        android:fillColor="#556B2F"
+        android:pathData="M380,16 L496,16 L496,132 Z" />
+    <path
+        android:strokeColor="#D2B48C"
+        android:strokeWidth="26"
+        android:strokeLineCap="square"
+        android:strokeLineJoin="miter"
+        android:pathData="M130,150 L220,256 L130,362 M210,150 L300,256 L210,362 M290,150 L380,256 L290,362" />
+</vector>

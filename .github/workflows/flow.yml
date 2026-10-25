@@ -1,0 +1,64 @@
+name: MK Flow APK
+
+# Builds the MK Flow TV launcher in flow/.
+# Test:     any push touching flow/ uploads the APKs as a workflow artifact (Actions tab > run > Artifacts).
+# Release:  bump versionName in flow/app/build.gradle.kts, then
+#           push tag flow-v1.1.0, or use Releases > "Draft a new release" with that tag
+#           (the tag must match versionName; the APK is attached to the GitHub Release).
+# The release APK is signed with the debug key, so it sideloads straight onto the TV stick.
+
+on:
+  push:
+    branches: ['**']
+    tags: ['flow-v*']
+    paths: ['flow/**', '.github/workflows/flow.yml']
+  pull_request:
+    paths: ['flow/**', '.github/workflows/flow.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: flow
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build APKs
+        run: ./gradlew assembleDebug assembleRelease --no-daemon
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mk-flow-${{ github.run_number }}
+          path: flow/app/build/outputs/apk/*/*.apk
+          retention-days: 14
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/flow-v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          version=$(sed -n 's/.*versionName = "\(.*\)".*/\1/p' app/build.gradle.kts)
+          if [ "flow-v$version" != "$TAG" ]; then
+            echo "Tag $TAG does not match versionName $version" >&2
+            exit 1
+          fi
+          cp app/build/outputs/apk/release/app-release.apk "mk-flow-$version.apk"
+          # A release made with GitHub's "New release" button already exists: attach the APK to it.
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "mk-flow-$version.apk" --clobber
+          else
+            gh release create "$TAG" "mk-flow-$version.apk" --title "MK Flow $version" --generate-notes
+          fi
