@@ -19,21 +19,29 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.consoletelemetry.TelemetryViewModel
 import com.consoletelemetry.model.Game
@@ -94,10 +102,12 @@ fun TelemetryContent(state: DashState, history: TelemetryHistory, actions: DashA
         Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .safeDrawingPadding()
+            .symmetricSafeDrawingPadding()
     ) {
         val wide = maxWidth >= 840.dp
-        Crossfade(dashLayoutFor(maxWidth, maxHeight), label = "layout") { layout ->
+        val current = dashLayoutFor(maxWidth, maxHeight)
+        ImmersiveWhen(current == DashLayout.PhoneLandscape)
+        Crossfade(current, label = "layout") { layout ->
             when (layout) {
                 DashLayout.Phone -> PhoneLayout(state, history, actions, personalBest)
                 DashLayout.PhoneLandscape -> LandscapeLayout(state, history, actions, personalBest)
@@ -105,6 +115,39 @@ fun TelemetryContent(state: DashState, history: TelemetryHistory, actions: DashA
             }
         }
         PersonalBestConfetti(burst, Modifier.matchParentSize())
+    }
+}
+
+/**
+ * Safe-drawing insets, but with the same left and right padding: a punch-hole camera on one
+ * side of a phone on its side otherwise pushes everything off-centre.
+ */
+@Composable
+private fun Modifier.symmetricSafeDrawingPadding(): Modifier {
+    val insets = WindowInsets.safeDrawing
+    val density = LocalDensity.current
+    val direction = LocalLayoutDirection.current
+    return with(density) {
+        val side = maxOf(insets.getLeft(density, direction), insets.getRight(density, direction)).toDp()
+        padding(start = side, end = side, top = insets.getTop(density).toDp(), bottom = insets.getBottom(density).toDp())
+    }
+}
+
+/** Hides the status and navigation bars for the wheel-mount race display; swipe from an edge to peek. */
+@Composable
+private fun ImmersiveWhen(enabled: Boolean) {
+    val view = LocalView.current
+    if (view.isInEditMode) return
+    DisposableEffect(enabled) {
+        val window = (view.context as? android.app.Activity)?.window
+        val controller = window?.let { WindowCompat.getInsetsController(it, view) }
+        if (enabled) {
+            controller?.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            controller?.hide(WindowInsetsCompat.Type.systemBars())
+        } else {
+            controller?.show(WindowInsetsCompat.Type.systemBars())
+        }
+        onDispose { controller?.show(WindowInsetsCompat.Type.systemBars()) }
     }
 }
 
@@ -143,7 +186,7 @@ private fun PhoneLayout(state: DashState, history: TelemetryHistory, actions: Da
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         TitleRow(state.status)
-        GameSelector(state.game, actions.onSelectGame)
+        GameSelector(state.game, actions.onSelectGame, fill = true)
         ConsoleIpField(state.showConsoleIp, state.consoleIp, actions.onConsoleIpChange)
         StatusRow(state.status, state.deviceIp, state.game, actions.onStart, actions.onStop)
         LiveOrSetup(state) { f ->
@@ -183,16 +226,17 @@ private fun LandscapeLayout(state: DashState, history: TelemetryHistory, actions
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             LiveBadge(state.status)
             GameSelector(state.game, actions.onSelectGame)
+            // GT7's console IP rides in the top bar so it doesn't push the dashboard down.
+            ConsoleIpField(state.showConsoleIp, state.consoleIp, actions.onConsoleIpChange, Modifier.width(200.dp))
             StatusText(state.status, state.deviceIp, state.game, Modifier.weight(1f), singleLine = true)
             StartStopButton(state.status is ReceiverStatus.Listening, actions.onStart, actions.onStop)
         }
-        ConsoleIpField(state.showConsoleIp, state.consoleIp, actions.onConsoleIpChange)
         LiveOrSetup(
             state,
             Modifier.weight(1f),
             setup = {
                 Column(Modifier.verticalScroll(rememberScrollState())) {
-                    SetupCard(state.game, state.deviceIp, state.waiting)
+                    SetupCard(state.game, state.deviceIp, state.waiting, wide = true, landscapeGhost = true)
                 }
             },
         ) { f -> LandscapeDash(f, history, personalBest) }
@@ -251,7 +295,7 @@ private fun TabletLayout(
             ) {
                 TitleRow(state.status, stacked = true)
                 Text("Game", color = Muted, fontSize = 12.sp)
-                GameSelector(state.game, actions.onSelectGame)
+                GameSelector(state.game, actions.onSelectGame, fill = true)
                 ConsoleIpField(state.showConsoleIp, state.consoleIp, actions.onConsoleIpChange)
                 StatusRow(state.status, state.deviceIp, state.game, actions.onStart, actions.onStop)
             }
@@ -272,7 +316,11 @@ private fun TabletLayout(
 
 @Composable
 private fun TabletDashboard(state: DashState, history: TelemetryHistory, personalBest: Boolean, modifier: Modifier) {
-    LiveOrSetup(state, modifier.verticalScroll(rememberScrollState())) { f ->
+    LiveOrSetup(
+        state,
+        modifier.verticalScroll(rememberScrollState()),
+        setup = { SetupCard(state.game, state.deviceIp, state.waiting, wide = true) },
+    ) { f ->
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             Column(Modifier.weight(1.3f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 PausedNote(f.isLive)

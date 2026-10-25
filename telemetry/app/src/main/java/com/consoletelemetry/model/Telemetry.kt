@@ -10,21 +10,21 @@ enum class Game(
         displayName = "Forza",
         listenPort = 5300,
         setupHint = "Forza Motorsport / Horizon 4 & 5: Settings › HUD and Gameplay › " +
-            "Data Out = On, Data Out IP = this phone's IP, Data Out Port = 5300, " +
+            "Data Out = On, Data Out IP = this device's IP, Data Out Port = 5300, " +
             "Packet Format = Dash (FM).",
     ),
     F1(
         displayName = "EA F1",
         listenPort = 20777,
         setupHint = "F1 23 / 24 / 25: Settings › Telemetry Settings › UDP Telemetry = On, " +
-            "UDP Broadcast Mode = Off, UDP IP Address = this phone's IP, Port = 20777, " +
+            "UDP Broadcast Mode = Off, UDP IP Address = this device's IP, Port = 20777, " +
             "UDP Format = 2023 or newer, Send Rate = 30–60 Hz.",
     ),
     GT7(
         displayName = "GT7",
         listenPort = 33740,
         setupHint = "Gran Turismo 7: no in-game setting needed. Enter your PlayStation's " +
-            "IP address below; the app pings it so the console starts streaming.",
+            "IP address in the field above; the app pings it so the console starts streaming.",
     ),
 }
 

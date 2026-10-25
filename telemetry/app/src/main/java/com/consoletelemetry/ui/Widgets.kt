@@ -36,6 +36,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
@@ -65,6 +66,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
@@ -184,18 +186,34 @@ private fun PulseDot(color: Color, pulsing: Boolean) {
 }
 
 @Composable
-internal fun GameSelector(selected: Game, onSelect: (Game) -> Unit, modifier: Modifier = Modifier) {
-    Row(modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+internal fun GameSelector(
+    selected: Game,
+    onSelect: (Game) -> Unit,
+    modifier: Modifier = Modifier,
+    fill: Boolean = false,
+) {
+    Row(if (fill) modifier.fillMaxWidth() else modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Game.entries.forEach { g ->
-            FilterChip(selected = g == selected, onClick = { onSelect(g) }, label = { Text(g.displayName) })
+            FilterChip(
+                selected = g == selected,
+                onClick = { onSelect(g) },
+                label = { Text(g.displayName, Modifier.fillMaxWidth(), textAlign = TextAlign.Center, maxLines = 1) },
+                modifier = if (fill) Modifier.weight(1f) else Modifier,
+            )
         }
     }
 }
 
 @Composable
-internal fun ConsoleIpField(visible: Boolean, ip: String, onChange: (String) -> Unit) {
+internal fun ConsoleIpField(
+    visible: Boolean,
+    ip: String,
+    onChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     AnimatedVisibility(
         visible = visible,
+        modifier = modifier,
         enter = fadeIn() + expandVertically(),
         exit = fadeOut() + shrinkVertically(),
     ) {
@@ -234,23 +252,17 @@ internal fun StatusText(
     singleLine: Boolean = false,
 ) {
     val (text, color) = when (status) {
-        ReceiverStatus.Stopped ->
-            (if (singleLine) "Stopped · this device $deviceIp:${game.listenPort}" else "Stopped") to Muted
+        ReceiverStatus.Stopped -> "Tap Start to listen for ${game.displayName}" to Muted
         is ReceiverStatus.Listening ->
             "Listening on $deviceIp:${status.port} · ${status.packetsPerSecond} pkt/s" to
                 (if (status.packetsPerSecond > 0) ThrottleGreen else Amber)
         is ReceiverStatus.Error -> status.message to BrakeRed
     }
     val tint by animateColorAsState(color, label = "status")
-    Column(modifier) {
-        Text(
-            text, color = tint, fontSize = 13.sp,
-            maxLines = if (singleLine) 1 else 3, overflow = TextOverflow.Ellipsis,
-        )
-        if (status is ReceiverStatus.Stopped && !singleLine) {
-            Text("Device IP: $deviceIp · port ${game.listenPort}", color = Muted, fontSize = 12.sp)
-        }
-    }
+    Text(
+        text, modifier, color = tint, fontSize = 13.sp,
+        maxLines = if (singleLine) 1 else 3, overflow = TextOverflow.Ellipsis,
+    )
 }
 
 @Composable
@@ -264,41 +276,82 @@ internal fun StartStopButton(running: Boolean, onStart: () -> Unit, onStop: () -
     }
 }
 
+/**
+ * Console setup help plus a ghost of the dashboard. [wide] puts the two side by side, so the
+ * landscape race display and tablets don't spend a whole screen on instructions.
+ */
 @Composable
-internal fun SetupCard(game: Game, deviceIp: String, waiting: Boolean, modifier: Modifier = Modifier) {
+internal fun SetupCard(
+    game: Game,
+    deviceIp: String,
+    waiting: Boolean,
+    modifier: Modifier = Modifier,
+    wide: Boolean = false,
+    landscapeGhost: Boolean = false,
+) {
     Panel(modifier) {
-        Text(
-            if (waiting) "Waiting for data…" else "Not connected",
-            fontWeight = FontWeight.SemiBold, color = Color.White,
-        )
-        Spacer(Modifier.height(6.dp))
-        Text(game.setupHint, color = Muted, fontSize = 14.sp)
-        Spacer(Modifier.height(6.dp))
-        Text(
-            "This device: $deviceIp · port ${game.listenPort}",
-            color = MaterialTheme.colorScheme.primary, fontFamily = FontFamily.Monospace,
-        )
-        Text("Device and console must be on the same network.", color = Muted, fontSize = 12.sp)
-        Spacer(Modifier.height(16.dp))
-        GhostDashboard(animate = waiting)
+        if (wide) {
+            Row(horizontalArrangement = Arrangement.spacedBy(20.dp), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) { SetupHelp(game, deviceIp, waiting) }
+                Box(Modifier.weight(1f)) { GhostDashboard(animate = waiting, landscape = landscapeGhost) }
+            }
+        } else {
+            SetupHelp(game, deviceIp, waiting)
+            Spacer(Modifier.height(16.dp))
+            GhostDashboard(animate = waiting)
+        }
     }
 }
 
-/** Outline of the dashboard that shimmers while the socket is open but nothing has arrived. */
 @Composable
-private fun GhostDashboard(animate: Boolean) {
+private fun SetupHelp(game: Game, deviceIp: String, waiting: Boolean) {
+    Text(
+        if (waiting) "Waiting for data…" else "Set up your console",
+        fontWeight = FontWeight.SemiBold, color = Color.White,
+    )
+    Spacer(Modifier.height(6.dp))
+    Text(game.setupHint, Modifier.widthIn(max = 600.dp), color = Muted, fontSize = 14.sp)
+    Spacer(Modifier.height(10.dp))
+    Text(if (game == Game.GT7) "Listening on" else "Send telemetry to", color = Muted, fontSize = 12.sp)
+    Text(
+        "$deviceIp:${game.listenPort}",
+        color = MaterialTheme.colorScheme.primary, fontFamily = FontFamily.Monospace,
+        fontSize = 18.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+    )
+    Spacer(Modifier.height(4.dp))
+    Text("Device and console must be on the same network.", color = Muted, fontSize = 12.sp)
+}
+
+/**
+ * Outline of the dashboard, laid out like the real one so the swap to live data doesn't jump.
+ * It shimmers once Start is tapped and the socket is waiting for the first packet.
+ */
+@Composable
+private fun GhostDashboard(animate: Boolean, landscape: Boolean = false) {
     val shimmer = if (animate) Modifier.shimmer() else Modifier
     Column(shimmer.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(verticalAlignment = Alignment.Bottom) {
-            Bone(Modifier.size(56.dp, 68.dp))
-            Spacer(Modifier.weight(1f))
-            Bone(Modifier.size(132.dp, 52.dp))
-        }
         Bone(Modifier.fillMaxWidth().height(12.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Bone(Modifier.weight(1f).height(72.dp))
-            Bone(Modifier.weight(1.4f).height(72.dp))
+        if (landscape) {
+            // Lap times, rev dial, pedals, tyres: same weights as LandscapeDash.
+            Row(Modifier.height(120.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Bone(Modifier.weight(1f).fillMaxHeight())
+                Bone(Modifier.weight(1.15f).fillMaxHeight())
+                Bone(Modifier.weight(0.4f).fillMaxHeight())
+                Bone(Modifier.weight(0.6f).fillMaxHeight())
+            }
+        } else {
+            // Gear + speed, rev bar, then pedals and tyres: same shape as the phone dashboard.
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Bone(Modifier.size(64.dp, 72.dp))
+                Bone(Modifier.weight(1f).height(52.dp))
+            }
+            Bone(Modifier.fillMaxWidth().height(10.dp))
+            Row(Modifier.height(96.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Bone(Modifier.weight(1f).fillMaxHeight())
+                Bone(Modifier.weight(1.4f).fillMaxHeight())
+            }
         }
+        Bone(Modifier.fillMaxWidth().height(8.dp))
     }
 }
 
