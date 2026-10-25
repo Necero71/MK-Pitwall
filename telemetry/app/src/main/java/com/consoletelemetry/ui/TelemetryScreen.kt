@@ -227,7 +227,7 @@ private fun LandscapeLayout(state: DashState, history: TelemetryHistory, actions
             LiveBadge(state.status)
             GameSelector(state.game, actions.onSelectGame)
             // GT7's console IP rides in the top bar so it doesn't push the dashboard down.
-            ConsoleIpField(state.showConsoleIp, state.consoleIp, actions.onConsoleIpChange, Modifier.width(200.dp))
+            ConsoleIpField(state.showConsoleIp, state.consoleIp, actions.onConsoleIpChange, Modifier.width(170.dp))
             StatusText(state.status, state.deviceIp, state.game, Modifier.weight(1f), singleLine = true)
             StartStopButton(state.status is ReceiverStatus.Listening, actions.onStart, actions.onStop)
         }

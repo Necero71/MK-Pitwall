@@ -199,7 +199,16 @@ internal fun GameSelector(
             FilterChip(
                 selected = g == selected,
                 onClick = { onSelect(g) },
-                label = { Text(g.displayName, Modifier.fillMaxWidth(), textAlign = TextAlign.Center, maxLines = 1) },
+                // Only stretch the label when the chips share the row; otherwise the first chip
+                // swallows the whole landscape top bar.
+                label = {
+                    Text(
+                        g.displayName,
+                        if (fill) Modifier.fillMaxWidth() else Modifier,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                    )
+                },
                 modifier = if (fill) Modifier.weight(1f) else Modifier,
             )
         }
@@ -222,7 +231,8 @@ internal fun ConsoleIpField(
         OutlinedTextField(
             value = ip,
             onValueChange = onChange,
-            label = { Text("PlayStation IP address") },
+            // One line only: squeezed into the landscape top bar, a wrapping label grows the field tall.
+            label = { Text("PlayStation IP", maxLines = 1, overflow = TextOverflow.Ellipsis) },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
             modifier = Modifier.fillMaxWidth(),
