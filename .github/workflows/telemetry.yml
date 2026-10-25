@@ -1,14 +1,27 @@
 name: Telemetry APK
 
-# Builds the native telemetry app in telemetry/ and runs its unit tests.
-# The debug APK is uploaded as a workflow artifact (Actions tab > run > Artifacts).
+# Builds MK Telemetry (telemetry/) and runs its unit tests.
+# Pushes and PRs touching telemetry/: debug APK as a workflow artifact (Actions tab > run > Artifacts).
+# Release:  git tag telemetry-v0.3.0 && git push origin telemetry-v0.3.0
+#           (builds a SIGNED APK and publishes a GitHub Release). Tags follow RELEASING.md.
 
 on:
   push:
+    branches: ['**']           # with only a tags filter, branch pushes would stop triggering
+    tags: ['telemetry-v*']     # path filters are skipped for tag pushes
     paths: ['telemetry/**', '.github/workflows/telemetry.yml']
   pull_request:
     paths: ['telemetry/**', '.github/workflows/telemetry.yml']
   workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+  ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+  ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+  ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
 jobs:
   build:
@@ -18,6 +31,8 @@ jobs:
         working-directory: telemetry
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # tags, so release notes start at the previous Telemetry tag
 
       - uses: actions/setup-java@v4
         with:
@@ -26,16 +41,74 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      - name: Work out version
+        id: ver
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+          RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          if [ "$REF_TYPE" = "tag" ]; then
+            if ! echo "$REF_NAME" | grep -Eq '^telemetry-v[0-9]+\.[0-9]+\.[0-9]+$'; then
+              echo "Tag must look like telemetry-v1.2.3 (got $REF_NAME)"; exit 1
+            fi
+            V="${REF_NAME#telemetry-v}"
+            IFS=. read -r MA MI PA <<< "$V"
+            # 0.3.0 -> 300, 1.2.3 -> 10203. Goes up as long as the tag does, which Android requires.
+            CODE=$(( MA * 10000 + MI * 100 + PA ))
+          else
+            V="0.0.0-dev.$RUN_NUMBER"
+            CODE="$RUN_NUMBER"
+          fi
+          echo "name=$V" >> "$GITHUB_OUTPUT"
+          echo "code=$CODE" >> "$GITHUB_OUTPUT"
+
+      - name: Decode signing keystore (release tags only)
+        id: key
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+        run: |
+          if [ "$REF_TYPE" = "tag" ] && [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.keystore"
+            echo "ANDROID_KEYSTORE_FILE=$RUNNER_TEMP/release.keystore" >> "$GITHUB_ENV"
+            echo "signed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Unit tests
         run: ./gradlew testDebugUnitTest --no-daemon
 
-      - name: Build debug APK
-        run: ./gradlew assembleDebug --no-daemon
+      - name: Build APK
+        env:
+          SIGNED: ${{ steps.key.outputs.signed }}
+          V_NAME: ${{ steps.ver.outputs.name }}
+          V_CODE: ${{ steps.ver.outputs.code }}
+        run: |
+          if [ "$SIGNED" = "true" ]; then TASK=assembleRelease; else TASK=assembleDebug; fi
+          ./gradlew "$TASK" -PversionCode="$V_CODE" -PversionName="$V_NAME" --no-daemon
+
+      - name: Collect APK
+        id: apk
+        env:
+          SIGNED: ${{ steps.key.outputs.signed }}
+          V_NAME: ${{ steps.ver.outputs.name }}
+        run: |
+          if [ "$SIGNED" = "true" ]; then SRC=$(ls app/build/outputs/apk/release/*.apk); SUFFIX=""; else SRC=$(ls app/build/outputs/apk/debug/*.apk); SUFFIX="-DEBUG"; fi
+          OUT="mk-telemetry-v${V_NAME}${SUFFIX}.apk"
+          cp "$SRC" "$GITHUB_WORKSPACE/$OUT"
+          echo "file=$OUT" >> "$GITHUB_OUTPUT"
+
+      - name: Check the APK is really signed (release only)
+        if: steps.key.outputs.signed == 'true'
+        run: |
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          "$BT/apksigner" verify --print-certs "$GITHUB_WORKSPACE/${{ steps.apk.outputs.file }}"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: mk-telemetry-debug-${{ github.run_number }}
-          path: telemetry/app/build/outputs/apk/debug/*.apk
+          name: ${{ steps.apk.outputs.file }}
+          path: ${{ steps.apk.outputs.file }}
           retention-days: 14
 
       - uses: actions/upload-artifact@v4
@@ -44,3 +117,14 @@ jobs:
           name: telemetry-test-reports-${{ github.run_number }}
           path: telemetry/app/build/reports/
           retention-days: 7
+
+      - name: Publish GitHub Release
+        if: github.ref_type == 'tag' && steps.key.outputs.signed == 'true'
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          FILE: ${{ steps.apk.outputs.file }}
+        run: |
+          PREV=$(git tag --list 'telemetry-v*' --sort=-v:refname | grep -vx "$TAG" | head -1)
+          gh release create "$TAG" "$FILE" --title "MK Telemetry ${TAG#telemetry-v}" --generate-notes ${PREV:+--notes-start-tag "$PREV"}

@@ -58,18 +58,18 @@ One keystore can sign both MK apps. Never commit it (`*.keystore` is git-ignored
 ### Releasing and updating
 
 ```bash
-git tag v1.0.0 && git push origin v1.0.0
+git tag pitwall-v1.0.0 && git push origin pitwall-v1.0.0
 ```
 
-GitHub Actions builds a signed APK and attaches it to a GitHub Release. Every new tag (`v1.0.1`, `v1.1.0`...) is an update. The version code is derived from the tag (`1.2.3` becomes `10203`), so tags must go up.
+GitHub Actions builds a signed APK and attaches it to a GitHub Release. Every new `pitwall-v*` tag (`pitwall-v1.0.1`, `pitwall-v1.1.0`...) is an update. The version code is derived from the tag (`1.2.3` becomes `10203`), so tags must go up. Full convention: [RELEASING.md](RELEASING.md).
 
 - **Install:** download the APK from the Releases page and allow installs from unknown sources.
-- **Auto-updates on the phone:** add this repo's URL to [Obtainium](https://github.com/ImranR98/Obtainium) and it will pick up new releases.
+- **Auto-updates on the phone:** add this repo's URL to [Obtainium](https://github.com/ImranR98/Obtainium) with the release title filter `^MK Pitwall` so it ignores MK Telemetry releases.
 - **Test build:** Actions tab, *Android APK*, *Run workflow*. With no secrets set it makes a debug APK (artifact only, never published). Debug and release builds are signed differently, so uninstall one before installing the other.
 
 ## MK Telemetry (companion app)
 
 `telemetry/` holds **MK Telemetry**, a native Android live dashboard for Forza, F1 and GT7 UDP telemetry on Xbox and PlayStation, styled to the Mavro Kinetic brand. See [telemetry/README.md](telemetry/README.md).
 
-- Every release tag builds both apps: the GitHub Release gets `mk-pitwall-vX.Y.Z.apk` and `mk-telemetry-vX.Y.Z.apk`, signed with the same key. Obtainium picks up both if you add the repo once per app.
+- Released on its own tags: `git tag telemetry-v0.3.0 && git push origin telemetry-v0.3.0` publishes "MK Telemetry 0.3.0" with `mk-telemetry-v0.3.0.apk`, signed with the same key as Pitwall. In Obtainium, add the repo a second time with the release title filter `^MK Telemetry`. See [RELEASING.md](RELEASING.md).
 - Pushes that touch `telemetry/` run the *Telemetry APK* workflow: unit tests plus a debug APK under the run's Artifacts.
