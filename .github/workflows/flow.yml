@@ -3,8 +3,8 @@ name: MK Flow APK
 # Builds the MK Flow TV launcher in flow/.
 # Test:     any push touching flow/ uploads the APKs as a workflow artifact (Actions tab > run > Artifacts).
 # Release:  bump versionName in flow/app/build.gradle.kts, then
-#           git tag flow-v1.1.0 && git push origin flow-v1.1.0
-#           (the tag must match versionName; publishes a GitHub Release with the APK).
+#           push tag flow-v1.1.0, or use Releases > "Draft a new release" with that tag
+#           (the tag must match versionName; the APK is attached to the GitHub Release).
 # The release APK is signed with the debug key, so it sideloads straight onto the TV stick.
 
 on:
@@ -56,4 +56,9 @@ jobs:
             exit 1
           fi
           cp app/build/outputs/apk/release/app-release.apk "mk-flow-$version.apk"
-          gh release create "$TAG" "mk-flow-$version.apk" --title "MK Flow $version" --generate-notes
+          # A release made with GitHub's "New release" button already exists: attach the APK to it.
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "mk-flow-$version.apk" --clobber
+          else
+            gh release create "$TAG" "mk-flow-$version.apk" --title "MK Flow $version" --generate-notes
+          fi
