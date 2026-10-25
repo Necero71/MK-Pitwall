@@ -127,4 +127,9 @@ jobs:
           FILE: ${{ steps.apk.outputs.file }}
         run: |
           PREV=$(git tag --list 'telemetry-v*' --sort=-v:refname | grep -vx "$TAG" | head -1)
-          gh release create "$TAG" "$FILE" --title "MK Telemetry ${TAG#telemetry-v}" --generate-notes ${PREV:+--notes-start-tag "$PREV"}
+          # A release made with GitHub's "New release" button already exists: attach the APK to it.
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$FILE" --clobber
+          else
+            gh release create "$TAG" "$FILE" --title "MK Telemetry ${TAG#telemetry-v}" --generate-notes ${PREV:+--notes-start-tag "$PREV"}
+          fi

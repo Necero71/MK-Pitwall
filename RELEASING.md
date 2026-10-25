@@ -19,6 +19,10 @@ The Android version code comes from the tag: `MAJOR × 10000 + MINOR × 100 + PA
 
 ## Cutting a release
 
+From your phone or the website: **Releases > Draft a new release**, type the new tag (e.g. `telemetry-v0.3.0`), target `main`, title it "MK Telemetry 0.3.0", and publish. The workflow builds the signed APK and attaches it to that release within a few minutes.
+
+Or from git:
+
 ```bash
 git checkout main && git pull
 git tag telemetry-v0.3.0          # or pitwall-v1.0.0
