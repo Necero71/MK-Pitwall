@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Mavro Kinetic #71: stencil numerals in a hex frame, tan on olive. Kept inside the 66dp safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:strokeColor="#D2B48C"
+        android:strokeWidth="3"
+        android:strokeLineJoin="miter"
+        android:pathData="M54,23 L81,38.5 L81,69.5 L54,85 L27,69.5 L27,38.5 Z" />
+    <!-- 7: top bar and diagonal, split by a stencil gap -->
+    <path
+        android:fillColor="#D2B48C"
+        android:pathData="M35,40 H53 V45.5 H35 Z M47,48 H54 L46.5,69 H39.5 Z" />
+    <!-- 1: flag and stem, stem split by a stencil gap -->
+    <path
+        android:fillColor="#D2B48C"
+        android:pathData="M56,46.5 L62,40 H68 V52.5 H62 V47 L58.5,50.5 Z M62,55.5 H68 V69 H62 Z" />
+</vector>

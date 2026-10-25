@@ -66,3 +66,10 @@ GitHub Actions builds a signed APK and attaches it to a GitHub Release. Every ne
 - **Install:** download the APK from the Releases page and allow installs from unknown sources.
 - **Auto-updates on the phone:** add this repo's URL to [Obtainium](https://github.com/ImranR98/Obtainium) and it will pick up new releases.
 - **Test build:** Actions tab, *Android APK*, *Run workflow*. With no secrets set it makes a debug APK (artifact only, never published). Debug and release builds are signed differently, so uninstall one before installing the other.
+
+## MK Telemetry (companion app)
+
+`telemetry/` holds **MK Telemetry**, a native Android live dashboard for Forza, F1 and GT7 UDP telemetry on Xbox and PlayStation, styled to the Mavro Kinetic brand. See [telemetry/README.md](telemetry/README.md).
+
+- Every release tag builds both apps: the GitHub Release gets `mk-pitwall-vX.Y.Z.apk` and `mk-telemetry-vX.Y.Z.apk`, signed with the same key. Obtainium picks up both if you add the repo once per app.
+- Pushes that touch `telemetry/` run the *Telemetry APK* workflow: unit tests plus a debug APK under the run's Artifacts.
