@@ -83,6 +83,12 @@ with `pm enable`):
 adb shell pm disable-user --user 0 com.google.android.tvlauncher
 ```
 
+## Releases
+
+Versions follow `flow-vX.Y.Z` tags in this repo. Bump `versionName` (and `versionCode`) in
+`app/build.gradle.kts`, then push a matching tag, e.g. `flow-v1.1.0`. GitHub Actions builds the APK
+and attaches it to a GitHub Release named "MK Flow 1.1.0".
+
 ## Building
 
 Run `build.bat`. The APKs land in `dist\`. The release APK is signed with the debug key so it

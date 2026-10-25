@@ -1,15 +1,23 @@
 name: MK Flow APK
 
 # Builds the MK Flow TV launcher in flow/.
-# The APKs are uploaded as a workflow artifact (Actions tab > run > Artifacts).
+# Test:     any push touching flow/ uploads the APKs as a workflow artifact (Actions tab > run > Artifacts).
+# Release:  bump versionName in flow/app/build.gradle.kts, then
+#           git tag flow-v1.1.0 && git push origin flow-v1.1.0
+#           (the tag must match versionName; publishes a GitHub Release with the APK).
 # The release APK is signed with the debug key, so it sideloads straight onto the TV stick.
 
 on:
   push:
+    branches: ['**']
+    tags: ['flow-v*']
     paths: ['flow/**', '.github/workflows/flow.yml']
   pull_request:
     paths: ['flow/**', '.github/workflows/flow.yml']
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -35,3 +43,17 @@ jobs:
           name: mk-flow-${{ github.run_number }}
           path: flow/app/build/outputs/apk/*/*.apk
           retention-days: 14
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/flow-v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          version=$(sed -n 's/.*versionName = "\(.*\)".*/\1/p' app/build.gradle.kts)
+          if [ "flow-v$version" != "$TAG" ]; then
+            echo "Tag $TAG does not match versionName $version" >&2
+            exit 1
+          fi
+          cp app/build/outputs/apk/release/app-release.apk "mk-flow-$version.apk"
+          gh release create "$TAG" "mk-flow-$version.apk" --title "MK Flow $version" --generate-notes
