@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MK Flow</string>
+    <string name="helper_label">MK Flow remote helper</string>
+    <string name="helper_description">Lets MK Flow open the app you chose when you press Netflix, Prime Video, Apps or Voice on your remote. It only looks at remote button presses.</string>
+</resources>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Flow" parent="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen">
+        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowAnimationStyle">@style/FlowActivityAnim</item>
+    </style>
+
+    <style name="Flow.Home">
+        <item name="android:windowDisablePreview">true</item>
+    </style>
+
+    <!-- See-through window: the flyout draws its own scrim and slides its own panel. -->
+    <style name="Flow.Flyout">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:windowDisablePreview">true</item>
+    </style>
+
+    <style name="FlowActivityAnim" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/rise_in</item>
+        <item name="android:activityOpenExitAnimation">@anim/hold</item>
+        <item name="android:activityCloseEnterAnimation">@anim/hold</item>
+        <item name="android:activityCloseExitAnimation">@anim/sink_out</item>
+    </style>
+
+    <style name="FlowSheet" parent="@android:style/Theme.DeviceDefault.Dialog.NoActionBar">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:windowAnimationStyle">@style/FlowSheetAnim</item>
+    </style>
+
+    <style name="FlowSheetAnim">
+        <item name="android:windowEnterAnimation">@anim/sheet_in</item>
+        <item name="android:windowExitAnimation">@anim/sheet_out</item>
+    </style>
+</resources>

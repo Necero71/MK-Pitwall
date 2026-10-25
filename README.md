@@ -73,3 +73,9 @@ GitHub Actions builds a signed APK and attaches it to a GitHub Release. Every ne
 
 - Every release tag builds both apps: the GitHub Release gets `mk-pitwall-vX.Y.Z.apk` and `mk-telemetry-vX.Y.Z.apk`, signed with the same key. Obtainium picks up both if you add the repo once per app.
 - Pushes that touch `telemetry/` run the *Telemetry APK* workflow: unit tests plus a debug APK under the run's Artifacts.
+
+## MK Flow (TV launcher)
+
+`flow/` holds **MK Flow**, the Android TV home screen for the Mi TV Stick, styled with the shared MK Tactical theme.
+Every push that touches `flow/` builds it in **Actions > MK Flow APK**; grab `app-release.apk` from the run's Artifacts.
+Install and setup steps are in [flow/README.md](flow/README.md).
