@@ -1,11 +1,12 @@
 # Releasing
 
-This repo ships two Android apps. Each has its own version line and its own tags, so you can follow either one on its own.
+This repo ships three Android apps. Each has its own version line and its own tags, so you can follow either one on its own.
 
 | App | Package id | Tag | Release title | APK |
 |---|---|---|---|---|
 | MK Pitwall | `io.github.necero71.mkpitwall` | `pitwall-vX.Y.Z` | MK Pitwall X.Y.Z | `mk-pitwall-vX.Y.Z.apk` |
 | MK Telemetry | `com.mavrokinetic.telemetry` | `telemetry-vX.Y.Z` | MK Telemetry X.Y.Z | `mk-telemetry-vX.Y.Z.apk` |
+| MK Flow (TV launcher) | `com.mavrokinetic.flow` | `flow-vX.Y.Z` | MK Flow X.Y.Z | `mk-flow-vX.Y.Z.apk` |
 
 ## Version numbers
 
@@ -31,12 +32,15 @@ git push origin telemetry-v0.3.0
 
 GitHub Actions builds a signed APK and publishes the GitHub Release, with notes listing the changes since that app's previous tag. Without the signing secrets, no release is published (see the README's signing setup).
 
+**MK Flow** works a little differently: its version lives in `flow/app/build.gradle.kts` (`versionName` and `versionCode`, same code rule), so bump those first and make the tag match, or the release run fails. Its release APK is signed with the debug key so it sideloads straight onto the TV stick, and needs no signing secrets.
+
 Pushes and pull requests build debug APKs only (Actions tab > the run > Artifacts). Debug and release builds are signed differently, so uninstall one before installing the other.
 
 ## History
 
 | App | Version | Notes |
 |---|---|---|
+| MK Flow | 1.1.0 (next) | MK Tactical restyle, new package id `com.mavrokinetic.flow` (installs next to the old Flow) |
 | MK Telemetry | 0.3.0 (next) | First signed release: Mavro Kinetic restyle, new package id `com.mavrokinetic.telemetry` |
 | MK Telemetry | 0.2.1 | Phone layout fixes (debug builds only) |
 | MK Telemetry | 0.2.0 | Phone, landscape and tablet layouts (debug builds only, as Console Telemetry) |
