@@ -55,10 +55,10 @@ jobs:
             echo "Tag $TAG does not match versionName $version" >&2
             exit 1
           fi
-          cp app/build/outputs/apk/release/app-release.apk "mk-flow-$version.apk"
+          cp app/build/outputs/apk/release/app-release.apk "mk-flow-v$version.apk"
           # A release made with GitHub's "New release" button already exists: attach the APK to it.
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" "mk-flow-$version.apk" --clobber
+            gh release upload "$TAG" "mk-flow-v$version.apk" --clobber
           else
-            gh release create "$TAG" "mk-flow-$version.apk" --title "MK Flow $version" --generate-notes
+            gh release create "$TAG" "mk-flow-v$version.apk" --title "MK Flow $version" --generate-notes
           fi
