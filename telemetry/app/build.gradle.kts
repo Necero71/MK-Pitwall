@@ -4,9 +4,9 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
-// CI passes -PversionCode=<n> -PversionName=<x.y.z> on release tags, same as the Pitwall app.
-val appVersionCode = (findProperty("versionCode") ?: "3").toString().toInt()
-val appVersionName = (findProperty("versionName") ?: "0.2.1").toString()
+// CI passes -PversionCode=<n> -PversionName=<x.y.z> from telemetry-vX.Y.Z tags (see RELEASING.md).
+val appVersionCode = (findProperty("versionCode") ?: "300").toString().toInt()
+val appVersionName = (findProperty("versionName") ?: "0.3.0").toString()
 val keystoreFile: String? = System.getenv("ANDROID_KEYSTORE_FILE")
 
 android {
@@ -14,7 +14,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.consoletelemetry"
+        applicationId = "com.mavrokinetic.telemetry"
         minSdk = 26
         targetSdk = 35
         versionCode = appVersionCode
