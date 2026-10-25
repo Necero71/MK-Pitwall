@@ -12,7 +12,7 @@ android {
         applicationId = "com.mavrokinetic.flow"
         minSdk = 24
         targetSdk = 34
-        versionCode = 2
+        versionCode = 10100
         versionName = "1.1.0"
     }
 
