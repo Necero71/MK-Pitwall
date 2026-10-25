@@ -63,7 +63,7 @@ private fun personalBestParties(): List<Party> {
         maxSpeed = 50f,
         damping = 0.9f,
         spread = 50,
-        colors = listOf(0xB388FF, 0x7C4DFF, 0xE040FB, 0xFFFFFF),
+        colors = listOf(0xD2B48C, 0xA3AD6E, 0x81613C, 0xECE4D0),
         timeToLive = 2_500,
         emitter = Emitter(duration = 250, TimeUnit.MILLISECONDS).max(90),
     )

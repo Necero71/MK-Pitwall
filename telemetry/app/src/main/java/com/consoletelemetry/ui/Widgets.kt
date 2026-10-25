@@ -37,6 +37,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
@@ -57,6 +58,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
@@ -84,14 +86,14 @@ import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
 
-internal val ThrottleGreen = Color(0xFF66BB6A)
-internal val BrakeRed = Color(0xFFEF5350)
-internal val Amber = Color(0xFFFFCA28)
-internal val Muted = Color(0xFF8A93A3)
-internal val PersonalBestPurple = Color(0xFFB388FF)
-private val ShiftBlue = Color(0xFF448AFF)
-private val Unlit = Color(0xFF3A4150)
-private val TabularNumbers = TextStyle(fontFeatureSettings = "tnum")
+internal val ThrottleGreen = Mk.SignalOk
+internal val BrakeRed = Mk.SignalAlert
+internal val Amber = Mk.SignalCaution
+internal val Muted = Mk.TextMuted
+internal val PersonalBestPurple = Mk.Tan
+private val ShiftBlue = Mk.SignalCold
+private val Unlit = Mk.Line
+private val TabularNumbers = Readout
 
 internal val TelemetryFrame.revFraction: Float
     get() = if (maxRpm > 0) (rpm / maxRpm).coerceIn(0f, 1f) else 0f
@@ -143,7 +145,7 @@ internal fun TitleRow(status: ReceiverStatus, stacked: Boolean = false) {
 
 @Composable
 private fun Title(modifier: Modifier = Modifier) {
-    Text("Console Telemetry", modifier, style = MaterialTheme.typography.headlineSmall, color = Color.White)
+    Text("MK TELEMETRY", modifier, style = MaterialTheme.typography.headlineSmall, color = Mk.Text)
 }
 
 @Composable
@@ -307,7 +309,7 @@ internal fun SetupCard(
 private fun SetupHelp(game: Game, deviceIp: String, waiting: Boolean) {
     Text(
         if (waiting) "Waiting for data…" else "Set up your console",
-        fontWeight = FontWeight.SemiBold, color = Color.White,
+        fontWeight = FontWeight.SemiBold, color = Mk.Text,
     )
     Spacer(Modifier.height(6.dp))
     Text(game.setupHint, Modifier.widthIn(max = 600.dp), color = Muted, fontSize = 14.sp)
@@ -315,7 +317,7 @@ private fun SetupHelp(game: Game, deviceIp: String, waiting: Boolean) {
     Text(if (game == Game.GT7) "Listening on" else "Send telemetry to", color = Muted, fontSize = 12.sp)
     Text(
         "$deviceIp:${game.listenPort}",
-        color = MaterialTheme.colorScheme.primary, fontFamily = FontFamily.Monospace,
+        color = MaterialTheme.colorScheme.primary, fontFamily = ReadoutFont,
         fontSize = 18.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
     )
     Spacer(Modifier.height(4.dp))
@@ -357,7 +359,7 @@ private fun GhostDashboard(animate: Boolean, landscape: Boolean = false) {
 
 @Composable
 private fun Bone(modifier: Modifier) {
-    Box(modifier.clip(RoundedCornerShape(8.dp)).background(MaterialTheme.colorScheme.surfaceVariant))
+    Box(modifier.clip(CutCornerShape(topStart = 8.dp, bottomEnd = 8.dp)).background(MaterialTheme.colorScheme.surfaceVariant))
 }
 
 @Composable
@@ -412,7 +414,7 @@ private const val SHIFT_LIMIT = 0.97f
 /** Upshifts roll the new gear in from below, downshifts from above. */
 @Composable
 internal fun GearIndicator(gear: Int, atLimiter: Boolean, fontSize: TextUnit, modifier: Modifier = Modifier) {
-    val color by animateColorAsState(if (atLimiter) BrakeRed else Color.White, tween(120), label = "gearColor")
+    val color by animateColorAsState(if (atLimiter) BrakeRed else Mk.Text, tween(120), label = "gearColor")
     AnimatedContent(
         targetState = gear,
         modifier = modifier.clipToBounds(),
@@ -438,7 +440,7 @@ internal fun SpeedReadout(
     Column(modifier, horizontalAlignment = alignment) {
         Text(
             "%.0f".format(speedKph), fontSize = fontSize, fontWeight = FontWeight.Bold,
-            color = Color.White, style = TabularNumbers, maxLines = 1,
+            color = Mk.Text, style = TabularNumbers, maxLines = 1,
         )
         Text("km/h", color = Muted)
     }
@@ -460,14 +462,14 @@ internal fun RpmBar(f: TelemetryFrame) {
             Modifier
                 .weight(1f)
                 .height(14.dp)
-                .clip(RoundedCornerShape(7.dp))
+                .clip(CutCornerShape(topStart = 7.dp, bottomEnd = 7.dp))
                 .background(MaterialTheme.colorScheme.surfaceVariant)
         ) {
             Box(Modifier.fillMaxHeight().fillMaxWidth(fill).background(color))
         }
         Text(
             "%,d rpm".format(f.rpm.toInt()),
-            color = Muted, fontSize = 12.sp, fontFamily = FontFamily.Monospace,
+            color = Muted, fontSize = 12.sp, fontFamily = ReadoutFont,
             modifier = Modifier.padding(start = 10.dp),
         )
     }
@@ -512,7 +514,7 @@ internal fun RevDial(f: TelemetryFrame, modifier: Modifier = Modifier) {
             GearIndicator(f.gear, f.atLimiter, with(density) { (diameter * 0.3f).toSp() })
             Text(
                 "%.0f".format(f.speedKph), fontSize = with(density) { (diameter * 0.11f).toSp() },
-                fontWeight = FontWeight.Bold, color = Color.White, style = TabularNumbers, maxLines = 1,
+                fontWeight = FontWeight.Bold, color = Mk.Text, style = TabularNumbers, maxLines = 1,
             )
             Text("km/h · %,d rpm".format(f.rpm.toInt()), color = Muted, fontSize = 12.sp, maxLines = 1)
         }
@@ -545,7 +547,7 @@ private fun PedalBar(label: String, value: Float, color: Color) {
             Modifier
                 .weight(1f)
                 .width(28.dp)
-                .clip(RoundedCornerShape(6.dp))
+                .clip(CutCornerShape(topStart = 6.dp, bottomEnd = 6.dp))
                 .background(MaterialTheme.colorScheme.surfaceVariant),
             contentAlignment = Alignment.BottomCenter,
         ) {
@@ -585,14 +587,14 @@ private fun TyreTile(tempC: Float?, wearPct: Float?, modifier: Modifier) {
     Column(
         modifier
             .fillMaxHeight()
-            .clip(RoundedCornerShape(8.dp))
+            .clip(CutCornerShape(topStart = 8.dp, bottomEnd = 8.dp))
             .background(color),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Text(tempC?.let { "%.0f".format(it) } ?: "–", color = Color.Black, fontWeight = FontWeight.Bold)
+        Text(tempC?.let { "%.0f".format(it) } ?: "–", color = Mk.Base, fontWeight = FontWeight.Bold)
         if (wearPct != null) {
-            Text("%.0f%% worn".format(wearPct), color = Color.Black, fontSize = 10.sp, maxLines = 1)
+            Text("%.0f%% worn".format(wearPct), color = Mk.Base, fontSize = 10.sp, maxLines = 1)
         }
     }
 }
@@ -605,7 +607,7 @@ internal fun SteeringBar(steer: Float, modifier: Modifier = Modifier) {
         drawRoundRect(track, cornerRadius = CornerRadius(size.height / 2))
         drawLine(Muted, Offset(size.width / 2, 0f), Offset(size.width / 2, size.height), 1.dp.toPx())
         val w = 6.dp.toPx()
-        drawRect(Color.White, topLeft = Offset((size.width - w) * pos, 0f), size = Size(w, size.height))
+        drawRect(Mk.Text, topLeft = Offset((size.width - w) * pos, 0f), size = Size(w, size.height))
     }
 }
 
@@ -738,9 +740,9 @@ private fun SectorRow(label: String, cells: List<String>, header: Boolean = fals
         cells.forEach {
             Text(
                 it,
-                color = if (header) Muted else Color.White,
+                color = if (header) Muted else Mk.Text,
                 fontSize = if (header) 12.sp else 15.sp,
-                fontFamily = FontFamily.Monospace,
+                fontFamily = ReadoutFont,
                 modifier = Modifier.weight(1f),
             )
         }
@@ -762,14 +764,14 @@ internal fun ErsDrsPanel(ers: ErsState?, drs: DrsState?) {
                     Modifier
                         .weight(1f)
                         .height(14.dp)
-                        .clip(RoundedCornerShape(7.dp))
+                        .clip(CutCornerShape(topStart = 7.dp, bottomEnd = 7.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant)
                 ) {
-                    Box(Modifier.fillMaxHeight().fillMaxWidth(store).background(Color(0xFFFFD54F)))
+                    Box(Modifier.fillMaxHeight().fillMaxWidth(store).background(Mk.Coyote))
                 }
                 Text(
                     "%.0f%%".format(ers.storeFraction * 100),
-                    color = Color.White, fontFamily = FontFamily.Monospace,
+                    color = Mk.Text, fontFamily = ReadoutFont,
                     modifier = Modifier.padding(start = 10.dp),
                 )
             }
@@ -795,10 +797,10 @@ private fun DrsBadge(drs: DrsState) {
     val background by animateColorAsState(
         if (lit) color else MaterialTheme.colorScheme.surfaceVariant, tween(200), label = "drsBg",
     )
-    val text by animateColorAsState(if (lit) Color.Black else color, tween(200), label = "drsText")
+    val text by animateColorAsState(if (lit) Mk.Base else color, tween(200), label = "drsText")
     Box(
         Modifier
-            .clip(RoundedCornerShape(6.dp))
+            .clip(CutCornerShape(topStart = 6.dp, bottomEnd = 6.dp))
             .background(background)
             .padding(horizontal = 10.dp, vertical = 4.dp),
     ) {
@@ -841,7 +843,7 @@ private fun DamageCell(name: String, pct: Int, modifier: Modifier, detail: Strin
         Text(name, color = Muted, fontSize = 13.sp, modifier = Modifier.padding(start = 6.dp).weight(1f))
         Text(
             detail ?: "$pct%",
-            color = Color.White, fontSize = 13.sp, fontFamily = FontFamily.Monospace,
+            color = Mk.Text, fontSize = 13.sp, fontFamily = ReadoutFont,
         )
     }
 }
@@ -851,28 +853,28 @@ private fun FaultTag(text: String) {
     Box(
         Modifier
             .padding(start = 6.dp)
-            .clip(RoundedCornerShape(6.dp))
+            .clip(CutCornerShape(topStart = 6.dp, bottomEnd = 6.dp))
             .background(BrakeRed)
             .padding(horizontal = 8.dp, vertical = 3.dp),
     ) {
-        Text(text, color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+        Text(text, color = Mk.Base, fontSize = 11.sp, fontWeight = FontWeight.Bold)
     }
 }
 
 @Composable
 internal fun Stat(label: String, value: String?, highlight: Boolean = false, valueSize: TextUnit = 18.sp) {
-    val color by animateColorAsState(if (highlight) PersonalBestPurple else Color.White, tween(300), label = "stat")
+    val color by animateColorAsState(if (highlight) PersonalBestPurple else Mk.Text, tween(300), label = "stat")
     Column {
         Text(label, color = Muted, fontSize = 12.sp)
-        Text(value ?: "–", color = color, fontSize = valueSize, fontFamily = FontFamily.Monospace, maxLines = 1)
+        Text(value ?: "–", color = color, fontSize = valueSize, fontFamily = ReadoutFont, maxLines = 1)
     }
 }
 
 private fun damageColor(pct: Int): Color = when {
     pct <= 0 -> Unlit
-    pct < 20 -> Color(0xFF81C784)
-    pct < 50 -> Color(0xFFFFD54F)
-    else -> Color(0xFFE57373)
+    pct < 20 -> Mk.SignalOk
+    pct < 50 -> Mk.SignalCaution
+    else -> Mk.SignalAlert
 }
 
 private fun gearLabel(gear: Int) = when {
@@ -884,11 +886,11 @@ private fun gearLabel(gear: Int) = when {
 /** Cold = blue, working window = green, hot = red. Rough window that suits all three games. */
 private fun tyreColor(t: Float?): Color = when {
     t == null -> Unlit
-    t < 60f -> Color(0xFF64B5F6)
-    t < 75f -> Color(0xFF80DEEA)
-    t < 100f -> Color(0xFF81C784)
-    t < 115f -> Color(0xFFFFD54F)
-    else -> Color(0xFFE57373)
+    t < 60f -> Mk.SignalCold
+    t < 75f -> Mk.SignalCold.copy(alpha = 0.7f).compositeOver(Mk.SignalOk)
+    t < 100f -> Mk.SignalOk
+    t < 115f -> Mk.SignalCaution
+    else -> Mk.SignalAlert
 }
 
 private fun formatSector(ms: Long?): String = when {
